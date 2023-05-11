@@ -71,15 +71,13 @@ private ArrayList<String> peerInfo;
 
     System.out.println("Enter messages (type '.' to exit)"); //to exit the chat, user enters "."
 
-    // Thread tempThread = new Thread();
-    // tempThread.start();
     new Thread(() -> {
-      while (true) {
-        try {
+      try {
+        while (true) {
           receive();
-        } catch (IOException e) {
-          
         }
+      } catch (IOException e) {
+        
       }
     }).start();
 
@@ -91,7 +89,13 @@ private ArrayList<String> peerInfo;
         break;
       }
 
-      send(getTimestamp() + " " + username + ": " + message + "");
+      new Thread(() -> {
+        try {
+          send(getTimestamp() + " " + username + ": " + message + "");
+        } catch (Exception e) {
+
+        }
+      }).start();
     }
 
     scanner.close();

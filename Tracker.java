@@ -2,7 +2,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class Tracker {
+public class Tracker implements Runnable {
 
     private DatagramSocket tracker;
     private DatagramPacket receivePacket, sendPacket;
@@ -17,7 +17,7 @@ public class Tracker {
         }
     }
 
-    public void sendMessage(String message) throws IOException {
+    public synchronized void sendMessage(String message) throws IOException {
         byte[] sendData = new byte[BUFFER_SIZE];
         sendData = message.getBytes();
 
@@ -51,7 +51,13 @@ public class Tracker {
         }
         System.out.println(message);
         sendMessage(message);
-        sendPeerList();
+        new Thread(() -> {
+            try {
+                sendPeerList();
+            } catch (IOException e) {
+                
+            }
+        }).start();
     }
 
     public void sendPeerList() throws IOException {
@@ -67,14 +73,43 @@ public class Tracker {
         sendMessage(message);
     }
 
+    @Override
+    public void run() {
+        try {
+            while (true) {
+                byte[] receiveData = new byte[BUFFER_SIZE];
+                receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                tracker.receive(receivePacket);
+                InetAddress IPAddress = receivePacket.getAddress();
+                int port = receivePacket.getPort();
+    
+                String message = new String(receivePacket.getData());
+                if (message.contains("has joined the chat")) {
+                    String[] newPeer = message.split(" ");
+                    HashMap<InetAddress, Integer> peerInfo = new HashMap<>();
+                    peerInfo.put(IPAddress, port);
+                    peers.put(newPeer[0], peerInfo);
+                }
+                else if (message.contains("has left the chat")) {
+                    String[] peer = message.split(" ");
+                    peers.remove(peer[0]);
+                }
+                System.out.println(message);
+                sendMessage(message);
+                sendPeerList();
+            }
+        } catch (Exception e) {
+            
+        }
+    }
+
     public static void main(String[] args) throws IOException {
         
         final int PORT = 5000;
         Tracker tracker = new Tracker(PORT);
-
-        while (true) {
-            tracker.receiveMessage();
-        }
+        Thread thread = new Thread(tracker);
+        thread.start();
+        
     }
     
 }
