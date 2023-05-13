@@ -8,7 +8,7 @@ public class UDPClient {
   private DatagramSocket socket; // Datagram socket to send/receive packets
   private InetAddress serverAddress; // IP address of server we are communicating with 
   private int serverPort; // port # of server we're communicating with 
-private ArrayList<String> peerInfo;
+  private ArrayList<String> peerInfo;
 
   // takes IP address and port # of sserver
   public UDPClient(String serverHost, int serverPort) throws SocketException, UnknownHostException {
